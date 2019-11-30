@@ -1,9 +1,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+
 import tensorflow as tf
 
 from tensorflow.keras import datasets, layers, models
-# import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt≤
 
 
 def custom_cnn():
@@ -29,7 +30,7 @@ def custom_cnn():
 
     model.add(layers.Flatten())
     model.add(layers.Dense(512, activation='relu'))
-    model.add(layers.Dense(num_classes, activation='softmax'))
+    model.add(layers.Dense(10, activation='softmax'))
 
     # model.add(Conv2D(filters=32, kernel_size=5, strides=5, border_mode='same',
     #                  input_shape=input_shape))
@@ -68,5 +69,5 @@ def custom_cnn():
                   loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])
 
-    history = model.fit(train_images, train_labels, epochs=10,
-                        validation_data=(test_images, test_labels))
+    # history = model.fit(train_images, train_labels, epochs=10,
+    #                     validation_data=(test_images, test_labels))
