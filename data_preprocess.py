@@ -35,12 +35,6 @@ def normalize_images(images):
     return imgs, labels
 
 
-def save_data(images, labels, name):
-    with h5py.File(name+".hdf5", "w") as f:
-        f.create_dataset("X", data=images, shape=images.shape, dtype='float32', compression="gzip")
-        f.create_dataset("Y", data=labels, shape=labels.shape, dtype='int32', compression="gzip")
-
-
 def get_box_data(index, hdf5_data):
 
     meta_data = dict()
@@ -71,10 +65,10 @@ def get_image(index, hdf5_data):
 
 def get_processed_data(path):
 
+    print("RUNNING PROCESS DATA")
+
     mat_data = h5py.File(path+'/digitStruct.mat')
     size = mat_data['/digitStruct/name'].size
-
-    print(size)
 
     train_images = []
     train_labels = []
@@ -90,46 +84,35 @@ def get_processed_data(path):
         labels = box['label']
         train_labels.append(labels)
 
+    train_images = np.asarray(train_images)
+    train_labels = np.asarray(train_labels)
+    train_bbox = np.asarray(train_bbox)
+
     train_images.astype('float32')
+    train_labels.astype('int32')
+    train_bbox.astype('int32')
+
+    train_images /= 255
+    np.asarray(train_bbox)
+    np.asarray(train_labels)
 
     return train_images, train_labels, train_bbox
 
 
+def save_data(images, labels, bbox, name):
+    print("SAVING DATA")
+    with h5py.File(name+".hdf5", "w") as f:
+        f.create_dataset("X", data=images, shape=images.shape, dtype='float32', compression="gzip")
+        f.create_dataset("Y", data=labels, shape=labels.shape, dtype='int32', compression="gzip")
+        f.create_dataset("bbox", data=bbox, shape=bbox.shape, dtype='int32', compression="gzip")
 
-# if __name__ == "__main__":
-#
-#     # train_data = load_data(TRAIN_DIR)
-#     # test_data = load_data(TEST_DIR)
-#     # extra_data = load_data(EXTRA_DIR)
-#     #
-#     # # train_images_normalized, train_labels = normalize_images(train_data)
-#     # # save_data(train_images_normalized, train_labels, "SVHN_train")
-#     # #
-#     # # test_images_normalized, test_labels = normalize_images(test_data)
-#     # # save_data(test_images_normalized, test_labels, "SVHN_test")
-#     #
-#     # extra_images_normalized, extra_labels = normalize_images(extra_data)
-#     # save_data(extra_images_normalized, extra_labels, "SVHN_extra")
-#
-#     # mat_data = h5py.File(TRAIN_DIR+'/digitStruct.mat')
-#     # size = mat_data['/digitStruct/name'].size
-#     #
-#     # print(size)
-#     #
-#     # train_images = []
-#     # train_labels = []
-#     # train_bbox = []
-#     #
-#     # for _i in tqdm.tqdm(range(size)):
-#     #     image_name = get_image(_i, mat_data)
-#     #     box = get_box_data(_i, mat_data)
-#     #     train_bbox.append(box)
-#     #     train_images.append(cv2.imread(os.path.join(TRAIN_DIR, image_name)))
-#     #     labels = box['label']
-#     #     train_labels.append(labels)
-#
-#     train_images, train_labels, train_bbox = get_processed_data(TRAIN_DIR)
+
+if __name__ == "__main__":
+
+    train_images, train_labels, train_bbox = get_processed_data(TRAIN_DIR)
+    save_data(train_images, train_labels, train_bbox, "SVHN_train")
+
 #
 #     # save_data(images, labels)
-#
+
 
