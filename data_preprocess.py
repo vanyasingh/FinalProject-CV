@@ -11,6 +11,9 @@ DATA_DIR = "data"
 TRAIN_DIR = os.path.join(DATA_DIR, 'train')
 TEST_DIR = os.path.join(DATA_DIR, 'test')
 EXTRA_DIR = os.path.join(DATA_DIR, 'extra')
+MAX_LABELS = 6
+NUM_LABELS = 11
+
 
 
 def load_data(path):
@@ -27,7 +30,7 @@ def load_data(path):
 
 
 def get_box_data(index, hdf5_data):
-
+    # print(index)
     meta_data = dict()
     meta_data['height'] = []
     meta_data['label'] = []
@@ -54,6 +57,36 @@ def get_image(index, hdf5_data):
     return ''.join([chr(v[0]) for v in hdf5_data[name[index][0]].value])
 
 
+def create_label_array(labels):
+
+    num_digits = len(labels)
+    labels_array = np.ones([MAX_LABELS], dtype=np.int32) * 10
+    one_hot_labels = np.zeros((MAX_LABELS, NUM_LABELS), dtype=np.int32)
+
+    for n in range(num_digits):
+        if labels[n] == 10:
+            labels[n] = 0
+        labels_array[n] = labels[n]
+
+    for n in range(len(labels_array)):
+        one_hot_labels[n] = one_hot_encode(labels_array[n])
+
+    return one_hot_labels
+
+
+def one_hot_encode(number):
+    """ Creates and returns a hot-hot-encoding representation of a given number
+    Args:
+        number: The number to be encoded
+    Returns:
+        The one-hot representation of the given number as a numpy array
+    """
+    one_hot = np.zeros(shape=NUM_LABELS, dtype=np.int32)
+    one_hot[number] = 1
+
+    return one_hot
+
+
 def get_train_data(path):
 
     print("RUNNING PROCESS DATA")
@@ -66,16 +99,23 @@ def get_train_data(path):
 
     dim = (64, 64)
 
-    for i in tqdm.tqdm(range(10)):
+    for i in tqdm.tqdm(range(size)):
         image_name = get_image(i, mat_data)
         image = cv2.imread(os.path.join(TRAIN_DIR, image_name))
 
         box = get_box_data(i, mat_data)
 
+        # print(box)
+
         x = int(min(box['top']))
         y = int(min(box['left']))
         h = int(max(box['height'])) + x
         w = int(sum(box['width'])) + y
+
+        print("---------------")
+        print(box)
+        print(image_name,x,y,h,w)
+        print("---------------")
 
         # crop and resize image
         crop_im = image[x:h, y:w, :]
@@ -89,51 +129,49 @@ def get_train_data(path):
         # regions = mser.detect(img, None)
         # print(regions)
 
-        print(box['label'])
-        pad = np.zeros(6)
+        train_labels.append(create_label_array(box['label']))
+
+    return train_images, train_labels
 
 
-
-    #
-    #     labels = box['label'].squeeze()
-    #     train_labels.append(np.int32(labels))
-    #
-    #
-    # train_images = np.array(train_images)
-    #
-    # # print(train_images.shape)
-    # train_labels = np.array(train_labels)
-    # print(train_labels)
-    # print(train_labels.shape)
-    # train_bbox = np.array(train_bbox)
-
-    # train_images = np.asarray(train_images)
-    # train_images.astype('float32')
-
-    # train_images /= 255
-
-    return train_images, train_labels, train_bbox
-
-
-def save_data(images, labels, bbox, name):
+def save_data(images, labels, name):
     print("SAVING DATA")
-    hf = h5py.File(name+".h5", 'w')
-    hf.create_dataset('X', data=images)
-    hf.create_dataset('Y', data=labels)
+    h5f = h5py.File(name+".hdf5", "w")
+    h5f.create_dataset(name + "_images", data=images)
+    h5f.create_dataset(name + "_labels", data=labels)
 
-    # with h5py.File(name+".hdf5", "w") as f:
-    #     f.create_dataset("X", data=images, shape=images.shape,dtype='float32', compression="gzip")
-    #     f.create_dataset("Y", data=labels, shape=labels.shape, dtype='int32', compression="gzip")
-    #     # f.create_dataset("bbox", data=bbox, shape=bbox.shape, dtype='int32', compression="gzip")
 
 
 if __name__ == "__main__":
-    # image = cv2.imread(os.path.join(TRAIN_DIR, '1.png'))
-    # cv2.imshow('image', image)
-    # cv2.waitKey(0)
+    image = cv2.imread(os.path.join(TRAIN_DIR, '252.png'))
 
-    train_images, train_labels, train_bbox = get_train_data(TRAIN_DIR)
-    save_data(train_images, train_labels, train_bbox, "SVHN_train")
+    mat_data = h5py.File(TRAIN_DIR + '/digitStruct.mat')
+    box = get_box_data(251, mat_data)
+    print(box)
+
+    x = int(min(box['top']))
+    y = int(min(box['left']))
+    h = int(max(box['height'])) + x
+    w = int(sum(box['width'])) + y
+
+    print(x, y, h, w)
+    #
+    # crop_im = image[x:h, y:w, :]
+    #
+    # dim = (64, 64)
+    # fin_im = cv2.resize(crop_im, dim, interpolation=cv2.INTER_AREA)
+    #
+    #
+    # cv2.imshow('image', fin_im)
+    # cv2.waitKey(0)
+    #
+    # print(box)
+
+    train_images, train_labels = get_train_data(TRAIN_DIR)
+    save_data(train_images, train_labels, "train")
+
+    # test_images, test_labels = get_train_data(TEST_DIR)
+    # save_data(test_images, test_labels, "test")
 
 #
 #     # save_data(images, labels)
