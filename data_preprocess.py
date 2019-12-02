@@ -15,20 +15,6 @@ MAX_LABELS = 6
 NUM_LABELS = 11
 
 
-
-def load_data(path):
-
-    # data = sio.loadmat(path+'_32x32.mat')
-    # mat_data = sio.loadmat(os.path.join(path, 'digitStruct.mat'))
-    mat_data = h5py.File(os.path.join(path, 'digitStruct.mat'))
-    data = mat_data["digitStruct"]
-
-    bbox = data['bbox']
-    name = data['name']
-
-    return name, bbox
-
-
 def get_box_data(index, hdf5_data):
     # print(index)
     meta_data = dict()
@@ -99,23 +85,17 @@ def get_train_data(path):
 
     dim = (64, 64)
 
-    for i in tqdm.tqdm(range(size)):
+    for i in tqdm.tqdm(range(10)):
         image_name = get_image(i, mat_data)
         image = cv2.imread(os.path.join(TRAIN_DIR, image_name))
-
-        box = get_box_data(i, mat_data)
-
-        # print(box)
+        # height, width, ch = image.shape
 
         x = int(min(box['top']))
         y = int(min(box['left']))
         h = int(max(box['height'])) + x
         w = int(sum(box['width'])) + y
 
-        print("---------------")
-        print(box)
-        print(image_name,x,y,h,w)
-        print("---------------")
+        box = get_box_data(i, mat_data)
 
         # crop and resize image
         crop_im = image[x:h, y:w, :]
@@ -136,42 +116,31 @@ def get_train_data(path):
 
 def save_data(images, labels, name):
     print("SAVING DATA")
-    h5f = h5py.File(name+".hdf5", "w")
-    h5f.create_dataset(name + "_images", data=images)
+    h5f = h5py.File(name+".h5", "w")
+    h5f.create_dataset(name + "_dataset", data=images)
     h5f.create_dataset(name + "_labels", data=labels)
 
 
+def load_data(name):
+    """Loads an hdf5 file that contains the image data and labels
+    Args:
+        name: The name of the file to be loaded
+    Returns:
+        The data and labels arrays
+    """
+    h5f = h5py.File(name + ".h5", "r")
+    data = h5f[name + "_dataset"][:]
+    labels = h5f[name + "_labels"][:]
+
+    return data, labels
 
 if __name__ == "__main__":
-    image = cv2.imread(os.path.join(TRAIN_DIR, '252.png'))
 
-    mat_data = h5py.File(TRAIN_DIR + '/digitStruct.mat')
-    box = get_box_data(251, mat_data)
-    print(box)
+    # train_images, train_labels = get_train_data(TRAIN_DIR)
+    # save_data(train_images, train_labels, "train")
 
-    x = int(min(box['top']))
-    y = int(min(box['left']))
-    h = int(max(box['height'])) + x
-    w = int(sum(box['width'])) + y
-
-    print(x, y, h, w)
-    #
-    # crop_im = image[x:h, y:w, :]
-    #
-    # dim = (64, 64)
-    # fin_im = cv2.resize(crop_im, dim, interpolation=cv2.INTER_AREA)
-    #
-    #
-    # cv2.imshow('image', fin_im)
-    # cv2.waitKey(0)
-    #
-    # print(box)
-
-    train_images, train_labels = get_train_data(TRAIN_DIR)
-    save_data(train_images, train_labels, "train")
-
-    # test_images, test_labels = get_train_data(TEST_DIR)
-    # save_data(test_images, test_labels, "test")
+    test_images, test_labels = get_train_data(TEST_DIR)
+    save_data(test_images, test_labels, "test")
 
 #
 #     # save_data(images, labels)

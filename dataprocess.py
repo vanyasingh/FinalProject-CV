@@ -85,6 +85,9 @@ class SVHNMulti:
         """Loops through every image and returns a large array containing the structure of each one"""
         structs = []
         for i in range(len(self.digit_struct_name)):
+        # for i in range(10):
+            #TODO: Delete the below line
+            print('Reading image {}'.format(i+1))
             structure = self.get_digit_structure(i)
             if len(structure["label"]) <= self.MAX_LABELS:
                 structs.append(structure)
@@ -97,7 +100,7 @@ class SVHNMulti:
             labels: The labels of the images
             name: The name of the file to created
         """
-        h5f = h5py.File(os.path.join(self.output_dir, name + ".h5"), "w")
+        h5f = h5py.File(name + ".h5", "w")
         h5f.create_dataset(name + "_dataset", data=data)
         h5f.create_dataset(name + "_labels", data=labels)
 
@@ -140,6 +143,7 @@ class SVHNMulti:
         if self.gray:
             self.NUM_CHANNELS = 1
 
+        print("Reading file .............")
         structs = self.read_digit_structure(data_dir)
         data_count = len(structs)
 
@@ -246,13 +250,13 @@ class SVHNMulti:
 def main():
     svhn = SVHNMulti("/data", max_labels=6, normalize=True, gray=False)
 
-    # Train dataset
-    train_data, train_labels = svhn.process_file("data/train")
-    svhn.save_data(train_data, train_labels, "train")
+    # # Train dataset
+    # train_data, train_labels = svhn.process_file("data/train")
+    # svhn.save_data(train_data, train_labels, "train")
 
-    # # Test dataset
-    # test_data, test_labels = svhn.process_file("../../res/original/test")
-    # svhn.save_data(test_data, test_labels, "test")
+    # Test dataset
+    test_data, test_labels = svhn.process_file("data/test")
+    svhn.save_data(test_data, test_labels, "test")
 
     # # Extra dataset
     # extra_data, extra_labels = svhn.process_file("../../res/original/extra")
