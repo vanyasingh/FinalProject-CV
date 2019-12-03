@@ -8,7 +8,7 @@ import tqdm
 class SVHNMulti:
     """ This class contains all the necessary functionality to Load, Process and Save the SVHN multi digit images """
 
-    def __init__(self, output_dir, max_labels=5, normalize=True, gray=False):
+    def __init__(self, output_dir, max_labels=6, normalize=True, gray=False):
         """ Default constructor
         Args:
             output_dir: The directory the processed data will be stored
@@ -84,8 +84,8 @@ class SVHNMulti:
     def get_all_images_and_digit_structures(self):
         """Loops through every image and returns a large array containing the structure of each one"""
         structs = []
-        for i in range(len(self.digit_struct_name)):
-        # for i in range(10):
+        # for i in range(len(self.digit_struct_name)):
+        for i in range(10):
             #TODO: Delete the below line
             print('Reading image {}'.format(i+1))
             structure = self.get_digit_structure(i)
@@ -148,6 +148,7 @@ class SVHNMulti:
         data_count = len(structs)
 
         image_data = np.zeros((data_count, self.OUT_HEIGHT, self.OUT_WIDTH, self.NUM_CHANNELS), dtype=np.float32)
+        # labels = np.zeros((data_count, self.MAX_LABELS), dtype=np.int32)
         labels = np.zeros((data_count, self.MAX_LABELS, self.NUM_LABELS), dtype=np.int32)
 
         print("processing file .............")
@@ -182,9 +183,11 @@ class SVHNMulti:
                 labels[n] = 0
             labels_array[n] = labels[n]
 
+        # print(labels_array)
+
         for n in range(len(labels_array)):
             one_hot_labels[n] = self.one_hot_encode(labels_array[n])
-
+        # print(one_hot_labels)
         return one_hot_labels
 
     def one_hot_encode(self, number):
@@ -251,8 +254,9 @@ def main():
     svhn = SVHNMulti("/data", max_labels=6, normalize=True, gray=False)
 
     # # Train dataset
-    # train_data, train_labels = svhn.process_file("data/train")
-    # svhn.save_data(train_data, train_labels, "train")
+    train_data, train_labels = svhn.process_file("data/train")
+    print(train_labels.shape)
+    svhn.save_data(train_data, train_labels, "train")
 
     # Test dataset
     test_data, test_labels = svhn.process_file("data/test")

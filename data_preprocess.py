@@ -4,8 +4,6 @@ import scipy.io as sio
 import h5py
 import tqdm
 import cv2
-# import DigitStructWrapper
-
 
 DATA_DIR = "data"
 TRAIN_DIR = os.path.join(DATA_DIR, 'train')
@@ -133,6 +131,24 @@ def load_data(name):
     labels = h5f[name + "_labels"][:]
 
     return data, labels
+
+def load_svhn_data(path, val_size):
+    with h5py.File(path+'/SVHN_train.hdf5', 'r') as f:
+        shape = f["X"].shape
+        x_train = f["X"][:shape[0]-val_size]
+        y_train = f["Y"][:shape[0]-val_size].flatten()
+        x_val = f["X"][shape[0]-val_size:]
+        y_val = f["Y"][shape[0] - val_size:].flatten()
+
+    with h5py.File(path+'/SVHN_test.hdf5', 'r') as f:
+        x_test = f["X"][:]
+        y_test = f["Y"][:].flatten()
+
+    y_train = keras.utils.to_categorical(y_train, 10)
+    y_val = keras.utils.to_categorical(y_val, 10)
+    y_test = keras.utils.to_categorical(y_test, 10)
+
+    return (x_train, y_train), (x_val, y_val), (x_test, y_test)
 
 if __name__ == "__main__":
 
