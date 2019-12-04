@@ -115,16 +115,6 @@ def train_custom_cnn():
     print("DONE")
 
 
-def predict(model, img_path, batch_size):
-    model = models.load_model('weights.hdf5')
-    # normalize image pixel values into range [0,1]
-    img_generator = image.ImageDataGenerator(preprocessing_function=lambda img: img/255.0)
-    validation_generator = img_generator.flow_from_directory(directory=img_path, target_size=(32, 32), shuffle=False,
-                                                             batch_size=batch_size, color_mode="rgb")
-
-    score = model.evaluate_generator(validation_generator)
-    print("Accuracy: {:.4f}".format(score[1]))
-
 
 if __name__ == "__main__":
     train_custom_cnn()
